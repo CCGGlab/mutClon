@@ -1,0 +1,12 @@
+channels:
+- conda-forge
+- bioconda
+dependencies:
+- r-base=4.0
+- r-essentials=4.0
+- bioconductor-deepsnv=1.40.0
+- bwa-mem2 
+- gatk
+- picard
+
+

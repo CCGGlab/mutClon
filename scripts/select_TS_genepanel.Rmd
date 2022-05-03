@@ -1,0 +1,148 @@
+---
+title: "Select Targeted Sequencing Gene panel"
+author: "Tom Luijts"
+date: "18-9-2020"
+output: html_notebook
+---
+
+# Aim
+
+Select a gene panel for deep sequencing of oral and skin samples, focusing on 3 groups of genes:
+
+1. **Driver genes**: 
+  - Genes used by Martincorena et al. 2015
+  - Additional known driver genes involved in melanoma and head & neck cancers.
+2. **Housekeeping genes**: Set of genes not expected to show any selection signals
+3. **Immune evasion**: Set of genes that have been described to be involved in immune evasion.
+
+# Gene selection
+
+## Driver genes: 101 genes
+
+### Martincorena et al., 2015: 76 genes
+
+```{r Martincorena genes}
+genes_IM2018<- c("ADAM29", "ADAMTS18", "AJUBA", "AKT1", "AKT2", "APOB", "ARID1A", "ARID2", "AURKA", "ADGRB3", "BRAF", "CASP8", "CCND1", "CDH1", "CDKN2A", "CR2", "CREBBP", "CUL3", "DICER1", "EGFR", "EPHA2", "ERBB2", "ERBB3", "ERBB4", "EZH2", "FAT1", "FAT4", "FBXW7", "FGFR1", "FGFR2", "FGFR3", "FLG2", "GRIN2A", "GRM3", "HRAS", "IRF6", "KCNH5", "KEAP1", "KMT2A", "KMT2C", "KMT2D", "KRAS", "MET", "MUC17", "NF1", "NFE2L2", "NOTCH1", "NOTCH2", "NOTCH3", "NOTCH4", "NRAS", "NSD1", "PCED1B", "PIK3CA", "PLCB1", "PPP1R3A", "PREX2", "PTCH1", "PTEN", "PTPRT", "RB1", "RBM10", "SALL1", "SCN11A", "SCN1A", "SETD2", "SMAD4", "SMO", "SOX2", "SPHKAP", "SUFU", "TP53", "TP63", "TRIOBP", "ZNF750", "TGFBR2")
+```
+
+### Other Cancer driver genes: 25 genes
+
+Proven cancer driver genes obtained from the supervised COSMIC database.
+
+```{r, message=F}
+cancer_gene_census <- readr::read_csv("~/downloads/cosmic/CGC/v91/cancer_gene_census.csv")
+
+## Remove all genes which are already included in the Martincorena et al. study
+cancer_gene_census_no_IM2018 <- cancer_gene_census[!cancer_gene_census$`Gene Symbol` %in% genes_IM2018,]
+
+## Select only the driver genes corresponding to the included cancer types (melanoma/skin and head & neck cancer)
+cancers <- c('melanoma','skin','HNSCC','oral SCC','head and neck')
+cancer_gene_census_melanoma <- cancer_gene_census_no_IM2018[grep(paste(cancers,collapse="|"), cancer_gene_census_no_IM2018$`Tumour Types(Somatic)`),]
+
+## Filter out the tier 2 and germline mutations
+cancer_gene_census_melanoma_filter <- cancer_gene_census_melanoma[cancer_gene_census_melanoma$Tier==1 & cancer_gene_census_melanoma$Somatic=='yes' & is.na(cancer_gene_census_melanoma$Germline),]
+
+# Get genes
+genes_drivers<- cancer_gene_census_melanoma_filter$`Gene Symbol`
+```
+
+## Housekeeping genes: 20 genes
+
+Housekeeping genes are randomly selected from a list of 3804 genes which are expressed uniformly across a panel of tissues as reported by [Eisenberg and Levanon 2013](https://www.cell.com/trends/genetics/fulltext/S0168-9525(13)00089-9) 
+
+```{r load_housekeeping}
+## load set of 3804 housekeeping genes
+housekeeping <- readr::read_tsv("~/downloads/pub/eisenberg_2013/HK_genes.txt", col_names = c("Gene","RefSeq transcript"))
+
+## 20 random genes
+set.seed(645)
+housekeeping_genes_1 <- sample(housekeeping$Gene, 30)
+set.seed(5541005)
+housekeeping_genes_2 <- sample(housekeeping$Gene, 30)
+
+
+## Manual curation to verify these genes have not been involved in cancer
+## Exclusion of MSH3, BUB3, PRCC, SZRD1, GTDC2, RRM1, CD63 SNRNP25
+housekeeping_genes_1<- housekeeping_genes_1[!housekeeping_genes_1%in%c("MSH3", "BUB3", "PRCC", "SZRD1", "GTDC2", "RRM1", "CD63", "SNRNP25")]
+housekeeping_genes_2<- housekeeping_genes_2[!housekeeping_genes_2%in%c("MSH3", "BUB3", "PRCC", "SZRD1", "GTDC2", "RRM1", "CD63", "SNRNP25")]
+housekeeping_genes<- c(housekeeping_genes_1[1:10],housekeeping_genes_2[1:10])
+```
+
+## Genes involved in immune evasion: 64 genes (JAK1/JAK2 by mistake left out of panel, so 62)
+
+### MHC Class I
+
+MHC Class I genes:
+```{r MHC Class I List}
+MHC_Class_I <- c('HLA-A', 'HLA-B', 'HLA-C')
+# This also contains the region to use the LOHHLA method (was verified manually)
+```
+
+MHC Class I pathway genes: from [Leone et al 2013](https://doi.org/10.1093/jnci/djt184)
+```{r MHC Class I PathwayList}
+MHC_Class_I_Pathway <- c('PSMB8', 'PSMB10', "JAK1", "JAK2", "TAP1", "TAP2", "ERAP1", "ERAP2", 'CANX', 'CALR', "TAPBP")
+```
+
+### MHC Class II
+
+MHC Class II genes:
+```{r MHC Class II list}
+MHC_Class_II <- c('HLA-DPA1', 'HLA-DPB1', 'HLA-DQA1', 'HLA-DQB1', 'HLA-DRA', 'HLA-DRB1', 'HLA-DRB5')
+```
+
+Genes involved in antigen presentation pathway: from [Paul et al 2011](https://www.sciencedirect.com/science/article/pii/S009286741100300X)
+```{r MHC Class II Pathway list}
+MHC_Class_II_Pathway <- c('PIK3R2', 'PIP5K1A', 'PSD4', 'ARL14EP', 'MYO1E')
+```
+
+### Other immune evasion genes
+
+Literature-based, manually curated set of relevant genes in immune evasion strategies:
+- Genes associated with local immune cytolytic activity from [Rooney et al 2015](https://doi.org/10.1016/j.cell.2014.12.033)
+- IL17 related genes from [Nanki et al 2020](https://www.nature.com/articles/s41586-019-1844-5)
+- Other:
+-- From [De Sanctis et al 2018](https://www.sciencedirect.com/science/article/pii/S1044532318300265#sect0050): TNFRS9 (CD137)
+-- From [Tucci et al 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6848379/table/T1/?report=objectonly) Molecules implicated in de Antigen Presenting Cells (Dendritic cells) - Melanoma interplay
+
+```{r}
+Rooney_genes<- c("B2M", "CASP8", "CD274", "PDCD1LG2", "ALOX12B", "ALOX15B")
+other_genes<- c("TNFRSF9", "CD80", "CD86", "CD40", "LAG3", "FAS")
+IL17_genes <- c('NFKBIZ', 'ZC3H12A', 'PIGR', 'TRAF3IP2', 'IL17RA','NOS2', 'OSMR', 'IL15RA', 'TLR3')
+IE_genes<- sort(unique(c(Rooney_genes, other_genes, IL17_genes, MHC_Class_I, MHC_Class_I_Pathway, MHC_Class_II, MHC_Class_II_Pathway)))
+```
+
+BED files were generated for these gene using Agilent SureDesign (hg38) and stored as raw/BGI/MutClon_1_Regions.bed
+
+## Define gene set & add relevant information
+
+```{r}
+# Read BED file
+TS_panel<- readr::read_table("~/raw/BGI/MutClon_1_Regions.bed", skip = 2, col_names = F)
+
+# Get genes
+gene_set_df<- data.frame(gene=unique(TS_panel$X4))
+
+# Add gene information
+gene_set_df$gene_type<- "housekeeping"
+gene_set_df$gene_type[gene_set_df$gene%in%IE_genes]<- "immune"
+gene_set_df$gene_type[gene_set_df$gene%in%c(genes_IM2018, genes_drivers)]<- "driver"
+
+# Ref
+gene_set_df$ref<- NA
+gene_set_df$ref[gene_set_df$gene%in%genes_IM2018]<- "Martincorena 2015"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene%in%genes_drivers]<- "Cosmic v91"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene_type=="housekeeping"]<- "Eisenberg 2013"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene%in%MHC_Class_I_Pathway]<- "Leone 2013"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene%in%MHC_Class_II_Pathway]<- "Paul 2011"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene%in%Rooney_genes]<- "Rooney 2015"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene%in%IL17_genes]<- "Nanki 2020"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene=="TNFRS9"]<- "De Sanctis 2018"
+gene_set_df$ref[is.na(gene_set_df$ref)&gene_set_df$gene%in%other_genes]<- "Tucci 2019"
+
+# Remove duplicates
+gene_set_df<- gene_set_df[!duplicated(gene_set_df$gene),]
+
+# Save
+saveRDS(gene_set_df, "~/data/TS_gene_set_df.rds")
+```
+
