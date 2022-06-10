@@ -1,4 +1,4 @@
-High level information on the bioinformatics pipeline that was used for the analysis as reported in **Tom Luijts, Kerryn Elliott, Joachim Tetteh Siaw, Joris Van de Velde, Elien Beyls, Arne Claeys, Tim Lammens, Erik Larsson, Wouter Willaert, Anne Vral and Jimmy Van den Eynden. A clinically annotated post-mortem approach to study multi-organ somatic mutational clonality in normal tissues. 2022**
+High level information on the bioinformatics pipeline that was used for the analysis as reported in [Tom Luijts, Kerryn Elliott, Joachim Tetteh Siaw, Joris Van de Velde, Elien Beyls, Arne Claeys, Tim Lammens, Erik Larsson, Wouter Willaert, Anne Vral and Jimmy Van den Eynden. A clinically annotated post-mortem approach to study multi-organ somatic mutational clonality in normal tissues. Scientific Reports, 2022.](https://doi.org/10.1038/s41598-022-14240-8)
 
 # Environment
   
@@ -14,7 +14,7 @@ The following data were downloaded from external sources:
 
 ## Raw data
 
-Raw sequencing data are deposited under controlled access in the European Genome–Phenome Archive (EGA; https://ega-archive.org).
+Raw sequencing data are deposited under controlled access in the European Genome–Phenome Archive (EGA; https://ega-archive.org; accession nr. EGAD00001008956).
 
 ## Downstream data
 
